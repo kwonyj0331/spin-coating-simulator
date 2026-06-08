@@ -84,9 +84,12 @@ export function runSimulation({
   while (t < maxTime && iter < MAX_ITER) {
     iter++
 
-    // Fixed dt — much simpler and faster
-    const dt = Math.min(0.05, maxTime - t)
-    if (dt <= 0) break
+    // Adaptive dt based on current h and eta for stability
+    const hMax = Math.max(...h)
+    const coeff = (rho * omega ** 2 * hMax ** 2) / (3 * eta * 1e-3)
+    const dtStab = coeff > 0 ? 0.3 * (dr ** 2) / (coeff * dr) : 0.5
+    const dt = Math.min(dtStab, 0.5, maxTime - t)
+    if (dt <= 1e-6) break
 
     h = rk4Step(h, r, dr, dt, omega, eta, E, rho)
     t += dt
